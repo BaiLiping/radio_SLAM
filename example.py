@@ -3,22 +3,12 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from scipy.signal import correlate
 from scipy.constants import c
+from PRS_CFO_estimate import PRS_CFO_estimate
+from load_IQ_data import load_IQ_data
 
-# Auxiliary functions
-def load_360measdata(file_path):
-    # Load data from binary file
-    # Placeholder function to mimic MATLAB's load_360measdata
-    # Should return (rxWaveformMat, TX_angles, RX_angles)
-    pass
-
-def PRS_CFO_estimate(rx_waveform, ref_waveform, TX_PRS_config, searchBW, PRS_ID, plot_flag):
-    # Placeholder function to mimic MATLAB's PRS_CFO_estimate
-    # Should return (corrected_waveform, freqOffset)
-    pass
 
 # Add auxiliary files path
-aux_files_path = 'Auxiliary_files'
-aux_functions_path = 'Auxiliary_functions'
+aux_files_path = '/home/bailiping/Desktop/radio_SLAM/Auxiliary_files'
 
 # Load and plot the map of the measurement environment
 tx_rx_positions = loadmat('TX_RX_positions.mat')
@@ -38,7 +28,7 @@ ax.legend(['Slanted beam', 'TX position', 'RX track'], loc='southeast', fontsize
 ax.grid(True)
 
 # Load waveforms and parameters for I/Q data processing
-measfolder = 'DUMMY_MEASUREMENT_FOLDER_NAME/'  # Remember "/" at the end
+measfolder =  '/home/bailiping/Desktop/Radio_SLAM_data/'
 
 # Load OFDM carrier and PRS signal configuration parameters
 prs_config = loadmat('Transmitted_PRS_config.mat')
@@ -54,8 +44,8 @@ d_est = calibration_data['d_est']
 d_cal = calibration_data['d_cal']
 
 # Choose the LoS component
-position_index = 42
-rxWaveformMat, _, TX_angles, RX_angles = load_360measdata(measfolder + f'position_{position_index}.mat')
+position_index = 3
+rxWaveformMat, _, TX_angles, RX_angles = load_IQ_data(measfolder + f'position_{position_index}.mat')
 NumTX = rxWaveformMat.shape[0]
 
 # Calculate the power and plot power map
