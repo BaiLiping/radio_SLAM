@@ -6,64 +6,62 @@ from scipy.constants import c
 from PRS_CFO_estimate import PRS_CFO_estimate
 from load_IQ_data import load_IQ_data
 
-
-# Add auxiliary files path
-aux_files_path = '/home/bailiping/Desktop/radio_SLAM/Auxiliary_files'
-
 # Load and plot the map of the measurement environment
-tx_rx_positions = loadmat('TX_RX_positions.mat')
+tx_rx_positions = loadmat('/home/bailiping/Desktop/radio_SLAM/Auxiliary_files/TX_RX_positions.mat')
 TX_pos = tx_rx_positions['TX_pos']
 RX_pos = tx_rx_positions['RX_pos']
-
-fig, ax = plt.subplots()
-map_fig = plt.imread('kampusarena_map.png')
-ax.imshow(map_fig)
-ax.plot(TX_pos[0][0], TX_pos[0][1], 'b^')
-ax.text(TX_pos[0][0] + 0.5, TX_pos[0][1] + 0.5, 'TX')
-ax.plot(RX_pos[:, 0], RX_pos[:, 1], 'rx')
-ax.text(RX_pos[34, 0], RX_pos[34, 1] + 0.7, 'RX')
-ax.set_xlabel('X [m]')
-ax.set_ylabel('Y [m]')
-ax.legend(['Slanted beam', 'TX position', 'RX track'], loc='southeast', fontsize=14)
-ax.grid(True)
 
 # Load waveforms and parameters for I/Q data processing
 measfolder =  '/home/bailiping/Desktop/Radio_SLAM_data/'
 
 # Load OFDM carrier and PRS signal configuration parameters
-prs_config = loadmat('Transmitted_PRS_config.mat')
+prs_config = loadmat('/home/bailiping/Desktop/radio_SLAM/Auxiliary_files/Transmitted_PRS_config.mat')
 TX_PRS_config = prs_config['TX_PRS_config']
 
 # Load reference PRS waveforms
-prs_waveforms = loadmat('PRS_waveform_bank_PRS_IDs_0_62.mat')
+prs_waveforms = loadmat('/home/bailiping/Desktop/radio_SLAM/Auxiliary_files/PRS_waveform_bank_PRS_IDs_0_62.mat')
 refWaveform = prs_waveforms['refWaveform']
 
 # Load ToA/range calibration terms
-calibration_data = loadmat('ToA_calibration_16_17_03_2023.mat')
+calibration_data = loadmat('/home/bailiping/Desktop/radio_SLAM/Auxiliary_files/ToA_calibration_16_17_03_2023.mat')
 d_est = calibration_data['d_est']
 d_cal = calibration_data['d_cal']
 
 # Choose the LoS component
 position_index = 3
-rxWaveformMat, _, TX_angles, RX_angles = load_IQ_data(measfolder + f'position_{position_index}.mat')
+rxWaveformMat, _, TX_angles, RX_angles = load_IQ_data(measfolder, position_index)
 NumTX = rxWaveformMat.shape[0]
 
 # Calculate the power and plot power map
 pmap_lin = np.mean(np.abs(rxWaveformMat)**2, axis=2) * 14
 pmap = 10 * np.log10(pmap_lin)
 
-# Plot power map (linear scale)
+# Find the positions of NaNs and Infinities
+nan_positions = np.argwhere(np.isnan(pmap_lin))
+inf_positions = np.argwhere(np.isinf(pmap_lin))
+
+print(f"NaN positions in pmap_lin: {nan_positions}")
+print(f"Infinite positions in pmap_lin: {inf_positions}")
+# Replace NaNs and infinite values with zeros
+pmap_lin_cleaned = np.nan_to_num(pmap_lin, nan=0.0, posinf=0.0, neginf=0.0)
+pmap_cleaned = 10 * np.log10(pmap_lin_cleaned)
+
+# Ensure no NaNs or infinite values remain
+if np.isnan(pmap_lin_cleaned).any() or np.isinf(pmap_lin_cleaned).any():
+    raise ValueError("pmap_lin_cleaned contains NaNs or infinite values after cleaning")
+
+# Plot power map (linear scale) with cleaned data
 plt.figure()
-plt.imshow(pmap_lin, aspect='auto', extent=[RX_angles.min(), RX_angles.max(), TX_angles.min(), TX_angles.max()])
+plt.imshow(pmap_lin_cleaned, aspect='auto', extent=[RX_angles.min(), RX_angles.max(), TX_angles.min(), TX_angles.max()], origin='lower')
 plt.colorbar(label='Power [mW]')
 plt.xlabel('θ, AoA [°]')
 plt.ylabel('φ, AoD [°]')
 plt.title(f'Power map [mW], position #{position_index}')
 plt.show()
 
-# Plot power map (log scale)
+# Plot power map (log scale) with cleaned data
 plt.figure()
-plt.imshow(pmap, aspect='auto', extent=[RX_angles.min(), RX_angles.max(), TX_angles.min(), TX_angles.max()])
+plt.imshow(pmap_cleaned, aspect='auto', extent=[RX_angles.min(), RX_angles.max(), TX_angles.min(), TX_angles.max()], origin='lower')
 plt.colorbar(label='Power [dBm]')
 plt.xlabel('θ, AoA [°]')
 plt.ylabel('φ, AoD [°]')
