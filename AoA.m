@@ -8,7 +8,7 @@ c = physconst('LightSpeed');
 load('Transmitted_PRS_config.mat')
 load('PRS_waveform_bank_PRS_IDs_0_62.mat')
 load('ToA_calibration_16_17_03_2023.mat');
-position_indices = 1:19;
+position_indices = 1:25;
 frames = cell(length(position_indices), 1);
 
 % Loop through each position index, generate the power map and store frames
