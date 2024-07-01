@@ -3,7 +3,7 @@ clear all, close all
 %  - Download auxillary finctions and parameter files.
 %  - Download binary measurement files to your local directory.
 %  - Assign path to the measurement directory to string variable 'measfolder' (with "\" in the end). 
-%  - Use function 'load_360measdata.m' to load the binary data, TX and RX angles.
+%  - Use function 'load_IQ_data.m' to load the binary data, TX and RX angles.
 %  - Loaded data are in the form of a data cube size L_TX x L_RX x N_waveform. 
 %  - Each vector rxWaveformMat(i,j,:) is a received waveform containing one OFDM symbol
 %       (PRS) received via (i,j) TX-RX beam pair. 
@@ -18,23 +18,11 @@ addpath('Auxiliary_files','Auxiliary_functions')
 % Each coordinate is in form (x,y) in global reference frame, in meters.
 % RX coordinate variable 'RX_pos' is matrix of size 45x2
 load('TX_RX_positions.mat') % 
-% Plot the environment and TX and RX locations
-fig = openfig('kampusarena_map.fig');
-ax = fig.CurrentAxes;
-hold on
-plot(ax,TX_pos(1),TX_pos(2),'b^')
-text(ax,TX_pos(1)+0.5,TX_pos(2)+0.5,'TX')
-plot(ax,RX_pos(:,1),RX_pos(:,2),'rx')
-text(ax,RX_pos(35,1),RX_pos(35,2)+0.7,'RX')
-xlabel('X [m]')
-ylabel('Y [m]')
-hold off
-legend('Slanted beam','TX position','RX track','Location','Southeast','FontSize',14)
-box on
+
 %
 %% Load waveforms and parameters for I/Q data processing
 % Incert the name of directory with binary files:
-measfolder = 'DUMMY_MEASUREMENT_FOLDER_NAME\'; % remember "\" at end
+measfolder = '/home/bailiping/Desktop/Radio_SLAM_data/'; 
 % Speed of light constant:
 c = physconst('LightSpeed');
 % Load OFDM carrier and PRS signal configuration parameters 'TX_PRS_config'
@@ -51,32 +39,52 @@ load('ToA_calibration_16_17_03_2023.mat');
 %% Choose the LoS component (MPC with highest power in case of LoS propagation)
 % Incert position number of a LoS propagation position (numbering as in the 
 % publication):
-position_index = 42;
-[rxWaveformMat,~,TX_angles,RX_angles] = load_IQ_data(measfolder,position_index);
-% Number of transmitted beams:
-NumTX = size(rxWaveformMat,1); 
-%
-%% Calculate the power and plot power map
-% Form the power matrix (in mW)
-pmap_lin = mean(abs(rxWaveformMat).^2,3)*14; % Factor 14 is used to normalize power to one slot, as only one OFDM symbol is transmitted
-% Form the power matrix (in dBm)
-pmap = 10*log10(pmap_lin); 
-% Plot power map (in linear scale)
-figure
-imagesc(RX_angles,TX_angles,pmap_lin),
-daspect([1,1,1]),
-colorbar,
-xlabel('\theta, AoA [\circ]')
-ylabel('\phi, AoD [\circ]')
-title(['Power map [mW], position #',num2str(position_index)])
-% Plot power map (in log scale)
-figure
-imagesc(RX_angles,TX_angles,pmap),
-daspect([1,1,1]),
-colorbar,
-xlabel('\theta, AoA [\circ]')
-ylabel('\phi, AoD [\circ]')
-title(['Power map [dBm], position #',num2str(position_index)])
+% Define the measurement folder and the range of positions
+position_indices = 1:19;
+
+% Preallocate cell array to store frame data for the GIF
+frames = cell(length(position_indices), 1);
+
+% Loop through each position index, generate the power map and store frames
+for idx = 1:length(position_indices)
+    position_index = position_indices(idx);
+    [rxWaveformMat,~,TX_angles,RX_angles] = load_IQ_data(measfolder, position_index);
+    % Number of transmitted beams
+    NumTX = size(rxWaveformMat,1); 
+
+    % Calculate the power and plot power map
+    % Form the power matrix (in mW)
+    pmap_lin = mean(abs(rxWaveformMat).^2,3)*14; % Factor 14 is used to normalize power to one slot, as only one OFDM symbol is transmitted
+    % Form the power matrix (in dBm)
+    pmap = 10*log10(pmap_lin); 
+
+    % Plot power map (in log scale)
+    figure;
+    imagesc(RX_angles, TX_angles, pmap);
+    daspect([1,1,1]);
+    colorbar;
+    xlabel('\theta, AoA [\circ]');
+    ylabel('\phi, AoD [\circ]');
+    title(['Power map [dBm], position #',num2str(position_index)]);
+    
+    % Capture the frame
+    frames{idx} = getframe(gcf);
+    close(gcf);
+end
+
+% Write the frames to a GIF file
+gif_filename = 'power_maps.gif';
+for idx = 1:length(frames)
+    [imind, cm] = rgb2ind(frame2im(frames{idx}), 256);
+    if idx == 1
+        imwrite(imind, cm, gif_filename, 'gif', 'Loopcount', inf, 'DelayTime', 0.5);
+    else
+        imwrite(imind, cm, gif_filename, 'gif', 'WriteMode', 'append', 'DelayTime', 0.5);
+    end
+end
+
+disp(['GIF saved as ', gif_filename]);
+
 %
 %%
 %% Extras: estimate CFO and the coarse time delay for the most powerful component
