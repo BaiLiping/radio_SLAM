@@ -3,20 +3,6 @@ import numpy as np
 from scipy.io import loadmat
 
 def load_IQ_data(measfolder, position):
-    """
-    Function to load the measured I/Q data from the original binary files.
-    INPUTS:
-        measfolder - path to the folder containing binary files (ending with '/')
-        position - RX position number.
-    OUTPUTS:
-        data_sorted - 3D matrix containing received complex samples.
-                      Dimensions are: [TX direction number x RX direction number x I/Q sample number]
-        power - estimates power in the channel,
-        TX_angles - TX main beam directions for each measurement,
-        RX_angles - RX main beam directions for each measurement.
-    Note that this function relies on the I/Q binary files naming convention.
-    If binary file names changed, edit function accordingly.
-    """
 
     # Load measurement parameters
     measParam = loadmat(os.path.join(measfolder, 'measParam.mat'))
