@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from scipy.io import loadmat
+import struct
 
 def load_IQ_data(measfolder, position):
 
@@ -16,8 +17,18 @@ def load_IQ_data(measfolder, position):
     filelist_Q = [f for f in os.listdir(measfolder) if f.startswith(f'pos{position}_Q')]
     filename_Q = os.path.join(measfolder, filelist_Q[0])
 
-    I = np.fromfile(filename_I, dtype=np.double)
-    Q = np.fromfile(filename_Q, dtype=np.double)
+    with open(filename_I, 'rb') as file:
+        # Read the entire content of the file
+        I = file.read()
+        integers_I = struct.unpack(f'{len(I) // 4}i', BlockSize)
+    with open(filename_Q, 'rb') as file:
+        # Read the entire content of the file
+        Q = file.read()
+    integers_Q = struct.unpack(f'{len(Q) // 4}i', Q)
+
+    
+    #I = np.fromfile(filename_I, dtype=np.double)
+    #Q = np.fromfile(filename_Q, dtype=np.double)
     iqData = I + 1j * Q
 
     # Reshape and permute data
