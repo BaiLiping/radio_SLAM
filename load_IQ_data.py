@@ -1,34 +1,28 @@
 import os
+import pickle
 import numpy as np
 from scipy.io import loadmat
-import struct
 
 def load_IQ_data(measfolder, position):
-
     # Load measurement parameters
     measParam = loadmat(os.path.join(measfolder, 'measParam.mat'))
     BlockSize = measParam['BlockSize'][0][0]
     TX_angles = measParam['TX_angles'].flatten()
     RX_angles = measParam['RX_angles'].flatten()
+    
+    
+    # Load I and Q data pickle files
+    filename_I = os.path.join(measfolder, f'I_data_{position}.pkl')
+    filename_Q = os.path.join(measfolder, f'Q_data_{position}.pkl')
 
-    # Load I and Q data files
-    filelist_I = [f for f in os.listdir(measfolder) if f.startswith(f'pos{position}_I')]
-    filename_I = os.path.join(measfolder, filelist_I[0])
-    filelist_Q = [f for f in os.listdir(measfolder) if f.startswith(f'pos{position}_Q')]
-    filename_Q = os.path.join(measfolder, filelist_Q[0])
 
+    # Load data from pickle files
     with open(filename_I, 'rb') as file:
-        # Read the entire content of the file
-        I = file.read()
-        integers_I = struct.unpack(f'{len(I) // 4}i', BlockSize)
+        I = pickle.load(file)
     with open(filename_Q, 'rb') as file:
-        # Read the entire content of the file
-        Q = file.read()
-    integers_Q = struct.unpack(f'{len(Q) // 4}i', Q)
+        Q = pickle.load(file)
 
     
-    #I = np.fromfile(filename_I, dtype=np.double)
-    #Q = np.fromfile(filename_Q, dtype=np.double)
     iqData = I + 1j * Q
 
     # Reshape and permute data

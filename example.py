@@ -28,7 +28,7 @@ d_est = calibration_data['d_est']
 d_cal = calibration_data['d_cal']
 
 # Choose the LoS component
-position_index = 3
+position_index = 1
 rxWaveformMat, _, TX_angles, RX_angles = load_IQ_data(measfolder, position_index)
 NumTX = rxWaveformMat.shape[0]
 
@@ -36,36 +36,27 @@ NumTX = rxWaveformMat.shape[0]
 pmap_lin = np.mean(np.abs(rxWaveformMat)**2, axis=2) * 14
 pmap = 10 * np.log10(pmap_lin)
 
-# Find the positions of NaNs and Infinities
-nan_positions = np.argwhere(np.isnan(pmap_lin))
-inf_positions = np.argwhere(np.isinf(pmap_lin))
-
-print(f"NaN positions in pmap_lin: {nan_positions}")
-print(f"Infinite positions in pmap_lin: {inf_positions}")
-# Replace NaNs and infinite values with zeros
-pmap_lin_cleaned = np.nan_to_num(pmap_lin, nan=0.0, posinf=0.0, neginf=0.0)
-pmap_cleaned = 10 * np.log10(pmap_lin_cleaned)
-
-# Ensure no NaNs or infinite values remain
-if np.isnan(pmap_lin_cleaned).any() or np.isinf(pmap_lin_cleaned).any():
-    raise ValueError("pmap_lin_cleaned contains NaNs or infinite values after cleaning")
 
 # Plot power map (linear scale) with cleaned data
 plt.figure()
-plt.imshow(pmap_lin_cleaned, aspect='auto', extent=[RX_angles.min(), RX_angles.max(), TX_angles.min(), TX_angles.max()], origin='lower')
+plt.imshow(pmap_lin, aspect='auto', extent=[RX_angles.min(), RX_angles.max(), TX_angles.min(), TX_angles.max()], origin='lower')
 plt.colorbar(label='Power [mW]')
 plt.xlabel('θ, AoA [°]')
 plt.ylabel('φ, AoD [°]')
 plt.title(f'Power map [mW], position #{position_index}')
+plt.grid(False)
+plt.clim(vmin=0, vmax=pmap_lin.max())  # Adjust color limits for better contrast
 plt.show()
 
 # Plot power map (log scale) with cleaned data
 plt.figure()
-plt.imshow(pmap_cleaned, aspect='auto', extent=[RX_angles.min(), RX_angles.max(), TX_angles.min(), TX_angles.max()], origin='lower')
+plt.imshow(pmap, aspect='auto', extent=[RX_angles.min(), RX_angles.max(), TX_angles.min(), TX_angles.max()], origin='lower')
 plt.colorbar(label='Power [dBm]')
 plt.xlabel('θ, AoA [°]')
 plt.ylabel('φ, AoD [°]')
 plt.title(f'Power map [dBm], position #{position_index}')
+plt.grid(True)
+plt.clim(vmin=-55, vmax=-25)  # Adjust color limits for better contrast
 plt.show()
 
 # Extras: estimate CFO and the coarse time delay for the most powerful component
