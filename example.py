@@ -29,7 +29,7 @@ d_cal = calibration_data['d_cal']
 
 # Choose the LoS component
 position_index = 1
-rxWaveformMat, _, TX_angles, RX_angles = load_IQ_data(measfolder, position_index)
+rxWaveformMat, power, TX_angles, RX_angles = load_IQ_data(measfolder, position_index)
 NumTX = rxWaveformMat.shape[0]
 
 # Calculate the power and plot power map

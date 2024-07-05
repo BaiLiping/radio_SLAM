@@ -39,30 +39,6 @@ function [data_sorted, power, TX_angles, RX_angles] = load_IQ_data(measfolder, p
     data_sorted = data_sorted(end:-1:1, end:-1:1, :);
     TX_angles = -TX_angles(end:-1:1);
     RX_angles = -RX_angles(end:-1:1);
-    
-    % Define the file paths for pickle files
-    pickle_file_I = fullfile(measfolder, ['I_data_', num2str(position), '.pkl']);
-    pickle_file_Q = fullfile(measfolder, ['Q_data_', num2str(position), '.pkl']);
-    pickle_file_TX_angles = fullfile(measfolder, ['TX_angles_', num2str(position), '.pkl']);
-    pickle_file_RX_angles = fullfile(measfolder, ['RX_angles_', num2str(position), '.pkl']);
-    
-    % Convert data to double precision before saving
-    I_double = double(I);
-    Q_double = double(Q);
-    TX_angles_double = double(TX_angles);
-    RX_angles_double = double(RX_angles);
-    
-    % Save the data to pickle files with high precision
-    save_to_pickle(pickle_file_I, I_double);
-    save_to_pickle(pickle_file_Q, Q_double);
-    save_to_pickle(pickle_file_TX_angles, TX_angles_double);
-    save_to_pickle(pickle_file_RX_angles, RX_angles_double);
-    
-    disp(['Data successfully written to ', pickle_file_I, ', ', pickle_file_Q, ', and ', pickle_file_TX_angles, ', ', pickle_file_RX_angles]);
 
 end
 
-function save_to_pickle(filename, data)
-    py_data = py.numpy.array(data);
-    py.pickle.dump(py_data, py.open(filename, 'wb'));
-end

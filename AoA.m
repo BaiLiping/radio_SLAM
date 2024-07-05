@@ -40,9 +40,9 @@ for idx = 1:length(position_indices)
 %
     %% Calculate the power and plot power map
     %% Form the power matrix (in mW)
-    %pmap_lin = mean(abs(rxWaveformMat).^2,3)*14; % Factor 14 is used to normalize power to one slot, as only one OFDM symbol is transmitted
+    pmap_lin = mean(abs(rxWaveformMat).^2,3)*14; % Factor 14 is used to normalize power to one slot, as only one OFDM symbol is transmitted
     %% Form the power matrix (in dBm)
-    %pmap = 10*log10(pmap_lin); 
+    pmap = 10*log10(pmap_lin); 
 %
     %% Plot power map (in log scale)
     %figure;
